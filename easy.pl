@@ -9,6 +9,8 @@ top_level_schedule(TutsSchedules, TAsNames, TAsSchedules, TAsDaysOff, Teams, Eva
   %maximum(EvalSched, X),
   %labeling([min(X)], Vars),
   labeling([], Vars),
+  %print(EvalSched),nl,
+  %print(EvalTAs),nl,
   pretty_print(EvalSched, EvalTAs, TAsNames),
   %print('full stop'),
   print(X).
@@ -77,13 +79,13 @@ schedule(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs):-
   length(EvalSched, LenTeams),
   length(EvalTAs, LenTeams),
 
-  EvalSched ins 1..114,
+  EvalSched ins 1..228,
   EvalTAs ins 1..LenTAs,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs).
 
 scheduleTeams(_,_,[], [],[]).
 scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|EvalScheds], [EvalTA|EvalTAs]):-
-  NormalEvalSlot #= ((EvalSlot-1) mod 114) +1,
+  NormalEvalSlot #= ((EvalSlot-1) mod 114) + 1,
   nth1(Tut1, TutsSchedules, Tut1Sched),
   nth1(Tut2, TutsSchedules, Tut2Sched),
   nth1(Tut3, TutsSchedules, Tut3Sched),
@@ -92,9 +94,10 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   element(NormalEvalSlot, Tut3Sched,0),
 
   flatten(TAsSchedules, Flattened), % rename
-  element(TASlot, Flattened, 0),
-  EvalSlot #= ((TASlot - 1) mod 114) + 1,
-  EvalTA #= ((TASlot - 1) / 114) + 1,
+  double(Flattened, Doubled), % to support two weeks
+  element(TASlot, Doubled, 0), 
+  EvalSlot #= ((TASlot - 1) mod 228) + 1,
+  EvalTA #= ((TASlot - 1) / 228) + 1,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
 
 ta_evalSlots_distinct(EvalSched_ta, EvalSched_time):-
@@ -103,7 +106,7 @@ ta_evalSlots_distinct(EvalSched_ta, EvalSched_time):-
 
 makeTASlots([], [], []).
 makeTASlots([TA|EvalSched_ta], [Time|EvalSched_time], [Slot|TASlots]):-
-  Slot #= TA * 114 + Time,
+  Slot #= TA * 228 + Time,
   makeTASlots(EvalSched_ta, EvalSched_time, TASlots).
 
 pretty_print([], [], _).
@@ -112,7 +115,6 @@ pretty_print([H|EvalSched_time], [H2|EvalSched_ta], TAsNames):-
   nth1(H2, TAsNames, TAName),
   print(H), print('	'), print(Day),print(' '), print(Hour), print(':'), 
   print(Min), print('	'), print(TAName), nl,flush,
-  %print(Index), print('	'), print(H), print('	'), print(H2), nl,flush,
   pretty_print(EvalSched_time, EvalSched_ta, TAsNames).
 
 get_time(EvalSlot, DayName, Hour, Min):-
@@ -125,9 +127,13 @@ day(EvalSlot, Day):-
 
 day_name(EvalSlot, DayName):-
   day(EvalSlot, Day),
-  DayMod #= DayMod mod 6,
+  DayMod #= Day mod 6,
   Relation = [[0, sat], [1, sun], [2, mon], [3, tue], [4, wed], [5, thur]],
-  nth0(_, Relation, [Day, DayName]).
+  nth0(_, Relation, [DayMod, DayName]).
+
+double(X, Y):-
+  flatten([X,X], Y).
+
 maximum([X], X).
 maximum([H|T], H):-
   H #> Max, 
