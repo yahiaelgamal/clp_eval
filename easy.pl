@@ -81,6 +81,10 @@ schedule(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs):-
   length(EvalSched, LenTeams),
   length(EvalTAs, LenTeams),
 
+  % 1 week
+  %EvalSched ins 1..114,
+
+  % 2 weeks (sloow)
   EvalSched ins 1..228,
   EvalTAs ins 1..LenTAs,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs).
@@ -96,10 +100,18 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   element(NormalEvalSlot, Tut3Sched,0),
 
   flatten(TAsSchedules, Flattened), % rename
+
+  % 1 week
+  %element(TASlot, Flattened, 0),
+  %EvalSlot #= ((TASlot - 1) mod 114) + 1,
+  %EvalTA #= ((TASlot - 1) / 114) + 1,
+
+  % TWO WEEKS (Slooow)
   double(Flattened, Doubled), % to support two weeks
   element(TASlot, Doubled, 0), 
   EvalSlot #= ((TASlot - 1) mod 228) + 1,
   EvalTA #= ((TASlot - 1) / 228) + 1,
+
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
 
 scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2]|Teams], [EvalSlot|EvalScheds], [EvalTA|EvalTAs]):-
