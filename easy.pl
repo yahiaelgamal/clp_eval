@@ -1,35 +1,32 @@
 :- use_module(library(clpfd)).
-:- use_module(library(lists)).
 top_level_schedule(TutsSchedules, TAsNames, TAsSchedules, TAsDaysOff, Teams, EvalSched, EvalTAs):-
-  convert(TutsSchedules, NewTutsSchedules),
-  convert(TAsSchedules, NewTAsSchedules),
-  % will applydayoffs in TAs scheudles
-  schedule(NewTutsSchedules, NewTAsSchedules, Teams, EvalSched, EvalTAs),
+  convert(TutsSchedules, ExpandedTutsSchedules),
+  convert(TAsSchedules, ExpandedTAsSchedules),
+  apply_days_off(ExpandedTAsSchedules, TAsDaysOff, ExpandedTAsSchedulesWithDaysOff),
+  schedule(ExpandedTutsSchedules, ExpandedTAsSchedulesWithDaysOff, Teams, EvalSched, EvalTAs),
   ta_evalSlots_distinct(EvalTAs, EvalSched),
-  %maximum(EvalSched, X),
   append(EvalSched, EvalTAs, Vars),
-  %labeling([min(X)], Vars).
-  print('FULL STOP').
+  labeling([], Vars).
 
 
-%  convert([[   1,1,0,1,1,
-%               0,1,1,0,1,
-%               0,0,0,1,0,
-%               1,1,1,1,0,
-%               0,1,0,1,0,
-%               1,1,1,1,1],
-%           [   0,0,1,1,1,
-%               1,0,1,1,0,
-%               0,1,1,0,0,
-%               0,0,1,1,1,
-%               0,1,1,1,0,
-%               1,1,1,1,1],
-%            [  0,1,0,1,1,
-%               0,1,1,1,1,
-%               1,1,1,0,0,
-%               1,0,0,1,1,
-%               0,0,1,0,0,
-%               1,1,1,1,1]], SlotSchedule)
+apply_days_off([], [], []).
+apply_days_off([OldTASchedHead|OldTASchedTail], [TADayOff|TAsDaysOff], [TASchedHead|TASchedTail]):-
+  help_apply_days_off(OldTASchedHead, TADayOff, TASchedHead, 0),
+  apply_days_off(OldTASchedTail, TAsDaysOff, TASchedTail).
+
+% expects dayoff 0-based
+help_apply_days_off([],_,[],_).
+help_apply_days_off([_|TailOldTAScheds], DayOff, [TASched| TailTAScheds], Index):-
+  DayOff is Index // 19,
+  TASched = 1,
+  NewIndex is Index + 1,
+  help_apply_days_off(TailOldTAScheds, DayOff, TailTAScheds, NewIndex).
+
+help_apply_days_off([OldTASched|TailOldTAScheds], DayOff, [TASched| TailTAScheds], Index):-
+  not(DayOff is Index // 19),
+  TASched = OldTASched,
+  NewIndex is Index + 1,
+  help_apply_days_off(TailOldTAScheds, DayOff, TailTAScheds, NewIndex).
 
 convert([], []).
 convert([OneSched|ScheduleTail], [OneSchedule2|SlotScheduleTail]):-
@@ -90,7 +87,6 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   element(NormalEvalSlot, Tut2Sched,0),
   element(NormalEvalSlot, Tut3Sched,0),
 
-  print('%%%%%%%%%%%%%%%%%%%%%%'),nl,
   flatten(TAsSchedules, Flattened), % rename
   element(TASlot, Flattened, 0),
   EvalSlot #= ((TASlot - 1) mod 114) + 1,
