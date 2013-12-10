@@ -1,4 +1,6 @@
 :- use_module(library(clpfd)).
+% Day offs are 0-based
+% Teams are 1-based
 top_level_schedule(TutsSchedules, TAsNames, TAsSchedules, TAsDaysOff, Teams, EvalSched, EvalTAs):-
   convert(TutsSchedules, ExpandedTutsSchedules),
   convert(TAsSchedules, ExpandedTAsSchedules),
