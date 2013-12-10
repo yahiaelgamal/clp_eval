@@ -6,8 +6,10 @@ top_level_schedule(TutsSchedules, TAsNames, TAsSchedules, TAsDaysOff, Teams, Eva
   schedule(ExpandedTutsSchedules, ExpandedTAsSchedulesWithDaysOff, Teams, EvalSched, EvalTAs),
   ta_evalSlots_distinct(EvalTAs, EvalSched),
   append(EvalSched, EvalTAs, Vars),
-  %maximum(EvalTAs, X),
+  %maximum(EvalSched, X),
+  %labeling([min(X)], Vars),
   labeling([], Vars),
+  pretty_print(EvalSched, EvalTAs, TAsNames),
   %print('full stop'),
   print(X).
 
@@ -75,7 +77,7 @@ schedule(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs):-
   length(EvalSched, LenTeams),
   length(EvalTAs, LenTeams),
 
-  EvalSched ins 1..228,
+  EvalSched ins 1..114,
   EvalTAs ins 1..LenTAs,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalSched, EvalTAs).
 
@@ -92,7 +94,7 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   flatten(TAsSchedules, Flattened), % rename
   element(TASlot, Flattened, 0),
   EvalSlot #= ((TASlot - 1) mod 114) + 1,
-  EvalTA #= ((TASlot - 3) / 114) + 1,
+  EvalTA #= ((TASlot - 1) / 114) + 1,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
 
 ta_evalSlots_distinct(EvalSched_ta, EvalSched_time):-
@@ -104,6 +106,28 @@ makeTASlots([TA|EvalSched_ta], [Time|EvalSched_time], [Slot|TASlots]):-
   Slot #= TA * 114 + Time,
   makeTASlots(EvalSched_ta, EvalSched_time, TASlots).
 
+pretty_print([], [], _).
+pretty_print([H|EvalSched_time], [H2|EvalSched_ta], TAsNames):-
+  get_time(H, Day, Hour, Min),
+  nth1(H2, TAsNames, TAName),
+  print(H), print('	'), print(Day),print(' '), print(Hour), print(':'), 
+  print(Min), print('	'), print(TAName), nl,flush,
+  %print(Index), print('	'), print(H), print('	'), print(H2), nl,flush,
+  pretty_print(EvalSched_time, EvalSched_ta, TAsNames).
+
+get_time(EvalSlot, DayName, Hour, Min):-
+  day_name(EvalSlot, DayName),
+  Hour is (17 + ((EvalSlot-1) mod 19) ) // 2,
+  Min is 30 * ((1+((EvalSlot-1) mod 19)) mod 2).
+
+day(EvalSlot, Day):-
+  Day #= (EvalSlot-1) / 19.
+
+day_name(EvalSlot, DayName):-
+  day(EvalSlot, Day),
+  DayMod #= DayMod mod 6,
+  Relation = [[0, sat], [1, sun], [2, mon], [3, tue], [4, wed], [5, thur]],
+  nth0(_, Relation, [Day, DayName]).
 maximum([X], X).
 maximum([H|T], H):-
   H #> Max, 
