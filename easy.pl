@@ -6,8 +6,10 @@ top_level_schedule(TutsSchedules, TAsNames, TAsSchedules, TAsDaysOff, Teams, Eva
   schedule(ExpandedTutsSchedules, ExpandedTAsSchedulesWithDaysOff, Teams, EvalSched, EvalTAs),
   ta_evalSlots_distinct(EvalTAs, EvalSched),
   append(EvalSched, EvalTAs, Vars),
-  labeling([], Vars).
-
+  %maximum(EvalTAs, X),
+  labeling([], Vars),
+  %print('full stop'),
+  print(X).
 
 apply_days_off([], [], []).
 apply_days_off([OldTASchedHead|OldTASchedTail], [TADayOff|TAsDaysOff], [TASchedHead|TASchedTail]):-
@@ -94,26 +96,18 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
 
 ta_evalSlots_distinct(EvalSched_ta, EvalSched_time):-
-	list_to_set(EvalSched_ta, TAs),
-	ta_evalSlots_distinct(TAs, EvalSched_ta, EvalSched_time).
-	
-ta_evalSlots_distinct([], _, _).
-ta_evalSlots_distinct([TA|TAs], EvalSched_ta, EvalSched_time):-
-	get_ta_evalSlots(TA, EvalSched_ta, EvalSched_time, TAEvalSlots),
-	all_distinct(TAEvalSlots),
-	ta_evalSlots_distinct(TAs, EvalSched_ta, EvalSched_time).
-	
-get_ta_evalSlots(_, [], [], []).
-get_ta_evalSlots(TA, [TA|TAs], [EvalSlot|EvalSlots], [EvalSlot|TAEvalSlots]):-
-	get_ta_evalSlots(TA, TAs, EvalSlots, TAEvalSlots).
-get_ta_evalSlots(TA, [TA1|TAs], [_|EvalSlots], TAEvalSlots):-
-	TA #\= TA1,
-	get_ta_evalSlots(TA, TAs, EvalSlots, TAEvalSlots).
+  makeTASlots(EvalSched_ta, EvalSched_time, TASlots),
+  all_distinct(TASlots).
+
+makeTASlots([], [], []).
+makeTASlots([TA|EvalSched_ta], [Time|EvalSched_time], [Slot|TASlots]):-
+  Slot #= TA * 114 + Time,
+  makeTASlots(EvalSched_ta, EvalSched_time, TASlots).
 
 maximum([X], X).
 maximum([H|T], H):-
-	H #> Max, 
-	maximum(T, Max).
+  H #> Max, 
+  maximum(T, Max).
 maximum([H|T], Max):-
-	H #=< Max,
-	maximum(T, Max).
+  H #=< Max,
+  maximum(T, Max).
