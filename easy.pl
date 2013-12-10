@@ -102,6 +102,20 @@ scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2,Tut3]|Teams], [EvalSlot|E
   EvalTA #= ((TASlot - 1) / 228) + 1,
   scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
 
+scheduleTeams(TutsSchedules, TAsSchedules, [[Tut1,Tut2]|Teams], [EvalSlot|EvalScheds], [EvalTA|EvalTAs]):-
+  NormalEvalSlot #= ((EvalSlot-1) mod 114) + 1,
+  nth1(Tut1, TutsSchedules, Tut1Sched),
+  nth1(Tut2, TutsSchedules, Tut2Sched),
+  element(NormalEvalSlot, Tut1Sched,0),
+  element(NormalEvalSlot, Tut2Sched,0),
+
+  flatten(TAsSchedules, Flattened), % rename
+  double(Flattened, Doubled), % to support two weeks
+  element(TASlot, Doubled, 0),
+  EvalSlot #= ((TASlot - 1) mod 228) + 1,
+  EvalTA #= ((TASlot - 1) / 228) + 1,
+  scheduleTeams(TutsSchedules, TAsSchedules, Teams, EvalScheds, EvalTAs).
+
 ta_evalSlots_distinct(EvalSched_ta, EvalSched_time):-
   makeTASlots(EvalSched_ta, EvalSched_time, TASlots),
   all_distinct(TASlots).
